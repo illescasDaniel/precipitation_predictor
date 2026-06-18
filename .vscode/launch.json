@@ -1,0 +1,41 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Predict Bilbao",
+			"type": "debugpy",
+			"request": "launch",
+			"module": "precipitation_predictor.predict_bilbao",
+			"cwd": "${workspaceFolder}",
+			"python": "${workspaceFolder}/.venv/bin/python",
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "Visualize Seasonality",
+			"type": "debugpy",
+			"request": "launch",
+			"module": "precipitation_predictor.visualize_seasonality",
+			"cwd": "${workspaceFolder}",
+			"python": "${workspaceFolder}/.venv/bin/python",
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "Run Benchmark",
+			"type": "debugpy",
+			"request": "launch",
+			"module": "precipitation_predictor.benchmark",
+			"cwd": "${workspaceFolder}",
+			"python": "${workspaceFolder}/.venv/bin/python",
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "Python Debugger: Current File",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${file}",
+			"cwd": "${workspaceFolder}",
+			"python": "${workspaceFolder}/.venv/bin/python",
+			"console": "integratedTerminal"
+		}
+	]
+}

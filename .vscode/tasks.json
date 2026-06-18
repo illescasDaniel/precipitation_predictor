@@ -1,0 +1,45 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Predict Bilbao",
+			"type": "shell",
+			"command": "./scripts/predict_bilbao.sh",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "Visualize Seasonality",
+			"type": "shell",
+			"command": "./scripts/visualize_seasonality.sh",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "Run Benchmark",
+			"type": "shell",
+			"command": "./scripts/benchmark.sh",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "Quality Gate (fix)",
+			"type": "shell",
+			"command": "./scripts/quality/checks.sh --fix",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "Quality Gate",
+			"type": "shell",
+			"command": "./scripts/quality/checks.sh",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		}
+	]
+}

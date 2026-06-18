@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "precipitation-predictor"
+version = "1.0.0"
+description = "Short-term precipitation forecasting for Spanish cities using AEMET Open Data and gradient boosting."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Daniel Illescas Romero" }]
+requires-python = ">=3.13"
+dependencies = [
+	"Babel>=2.0",
+	"matplotlib>=3.8",
+	"numpy>=2.0",
+	"pandas>=2.2",
+	"python-dateutil>=2.9",
+	"python-dotenv>=1.0",
+	"requests>=2.32",
+	"scikit-learn>=1.5",
+	"seaborn>=0.13",
+	"xgboost>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+	"basedpyright>=1.29",
+	"pip-audit>=2.7",
+	"ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["precipitation_predictor*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+src = ["src"]
+
+[tool.ruff.format]
+indent-style = "tab"
+
+[tool.ruff.lint]
+select = ["F", "I", "E", "S", "B"]
+fixable = ["ALL"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/**" = ["S603", "S607"]
+"src/precipitation_predictor/internal/process_data.py" = ["E701"]
+"src/precipitation_predictor/utils/config_exploration.py" = ["S311", "B023", "B006"]
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+include = ["src"]
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownLambdaType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportAttributeAccessIssue = false
+executionEnvironments = [{ root = "src" }]
