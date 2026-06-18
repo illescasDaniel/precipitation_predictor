@@ -1,5 +1,6 @@
-from precipitation_predictor.config import BENCHMARK_OUTPUT_PATH, BENCHMARK_RESULTS_DIR
-from precipitation_predictor.internal.process_data import load_data, process_data
+from precipitation_predictor.config import BENCHMARK_OUTPUT_PATH, BENCHMARK_RESULTS_DIR, BILBAO_IDEMA
+from precipitation_predictor.internal.climate_db import load_station_records
+from precipitation_predictor.internal.process_data import process_data
 from precipitation_predictor.models.column import Column
 from precipitation_predictor.models.feature import Feature
 from precipitation_predictor.models.xgboost_wrapper import XGBoostWrapper
@@ -29,7 +30,7 @@ if __name__ == "__main__":
 	]
 
 	# Load, process and run benchmark
-	data = load_data([f"./data/Bilbao/historical_climate_data_BILBAO_{i}.json" for i in range(0, 11)])
+	data = load_station_records(BILBAO_IDEMA)
 	df = process_data(data)
 
 	seed = 28

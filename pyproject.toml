@@ -27,6 +27,7 @@ dependencies = [
 dev = [
 	"basedpyright>=1.29",
 	"pip-audit>=2.7",
+	"pytest>=8.0",
 	"ruff",
 ]
 
@@ -55,6 +56,13 @@ lines-after-imports = 2
 "scripts/**" = ["S603", "S607"]
 "src/precipitation_predictor/internal/process_data.py" = ["E701"]
 "src/precipitation_predictor/utils/config_exploration.py" = ["S311", "B023", "B006"]
+"tests/**" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+	"integration: requires data/climate.sqlite and exported model bundles",
+]
 
 [tool.basedpyright]
 typeCheckingMode = "strict"

@@ -12,7 +12,8 @@
 - Application code: `src/precipitation_predictor/`
 - Entry modules at package root (`predict_bilbao.py`, `benchmark.py`, etc.); library code in `internal/`
 - Import as `precipitation_predictor.*` (not `src.*`).
-- AEMET JSON data: `data/` (paths are relative to repo root)
+- AEMET JSON data: `data/**/*.json` (source of truth, version-controlled)
+- Runtime climate queries: `data/climate.sqlite` (version-controlled; built from JSON via `./scripts/import_climate_db.sh`)
 - Generated outputs: `results/` (charts and metrics from predict/seasonality scripts)
 - AEMET API key: repo-root `.env` (`AEMET_API_KEY`; see `.env.example`)
 - Run entry scripts from the repository root:
@@ -20,6 +21,7 @@
 | Script | Purpose |
 |--------|---------|
 | `./scripts/extract_aemet_data.sh` | Fetch raw AEMET JSON into `data/` |
+| `./scripts/import_climate_db.sh` | Rebuild `data/climate.sqlite` from all `data/**/*.json` (after JSON changes) |
 | `./scripts/predict_bilbao.sh` | Train/predict Bilbao for sample dates |
 | `./scripts/export_bilbao_model.sh` | Train and export Bilbao XGBoost bundle (`.ubj` + manifest); optional `--prediction-date`, default output dir uses `max_date` |
 | `./scripts/predict_bilbao_from_model.sh` | Forecast from an exported model bundle (no retraining) |
@@ -48,6 +50,8 @@ Individual steps:
 | Ruff only | `./scripts/quality/ruff.sh` |
 | Shell lint | `./scripts/quality/shellcheck.sh` |
 | Typecheck | `./scripts/quality/pyright.sh` |
+| Unit tests | `./scripts/quality/pytest.sh -m "not integration"` |
+| All tests | `./scripts/quality/pytest.sh` |
 
 Install missing shell tools: `./scripts/install/install_shellcheck.sh`
 

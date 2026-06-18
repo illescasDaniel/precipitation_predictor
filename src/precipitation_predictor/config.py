@@ -1,9 +1,13 @@
+from datetime import date, timedelta
+
 from precipitation_predictor.models.column import Column
 from precipitation_predictor.models.feature import Feature
 
 
 SEED = 28
 FORECAST_HORIZON = 14
+CLIMATE_DB_PATH = "./data/climate.sqlite"
+BILBAO_IDEMA = "1082"
 
 DEFAULT_FEATURES = [
 	*[Feature.lag(Column.PRECIPITATION, p) for p in [14, 16, 18, 20]],
@@ -12,6 +16,7 @@ DEFAULT_FEATURES = [
 ]
 DEFAULT_DATE_FEATURES = [Column.DAY_OF_YEAR]
 MAX_FEATURE_PERIOD = max((f.window for f in DEFAULT_FEATURES), default=0)
+INFERENCE_LOOKBACK_DAYS = (2 * MAX_FEATURE_PERIOD) + 1
 
 RESULTS_DIR = "./results"
 BILBAO_RESULTS_DIR = f"{RESULTS_DIR}/bilbao"
@@ -46,12 +51,29 @@ STD_RESIDUALS_LIST = [
 ]
 
 
+def inference_data_window(max_date: date, forecast_horizon: int) -> tuple[date, date]:
+	"""Date range for loaded-model inference: trailing history plus optional evaluation horizon."""
+	start_date = max_date - timedelta(days=INFERENCE_LOOKBACK_DAYS)
+	end_date = max_date + timedelta(days=forecast_horizon)
+	return start_date, end_date
+
+
 def bilbao_data_files() -> list[str]:
 	return [f"./data/Bilbao/historical_climate_data_BILBAO_{i}.json" for i in range(0, 11)]
 
 
 def city_data_files(city_dir: str, file_prefix: str, start: int, end: int) -> list[str]:
 	return [f"./data/{city_dir}/{file_prefix}_{i}.json" for i in range(start, end)]
+
+
+def seasonality_stations() -> list[tuple[str, str]]:
+	return [
+		("Bilbao", BILBAO_IDEMA),
+		("San Sebastian", "1024E"),
+		("Valencia", "8416"),
+		("Madrid", "3195"),
+		("Malaga", "6155A"),
+	]
 
 
 def seasonality_city_paths() -> list[tuple[str, list[str]]]:

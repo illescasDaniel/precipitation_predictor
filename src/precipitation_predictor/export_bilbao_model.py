@@ -7,15 +7,16 @@ import numpy as np
 import pandas as pd
 
 from precipitation_predictor.config import (
+	BILBAO_IDEMA,
 	BILBAO_MODELS_DIR,
 	DEFAULT_DATE_FEATURES,
 	DEFAULT_FEATURES,
 	FORECAST_HORIZON,
 	MAX_FEATURE_PERIOD,
 	SEED,
-	bilbao_data_files,
 )
-from precipitation_predictor.internal.process_data import create_temporal_features, load_data, process_data
+from precipitation_predictor.internal.climate_db import load_station_records
+from precipitation_predictor.internal.process_data import create_temporal_features, process_data
 from precipitation_predictor.models.column import Column
 from precipitation_predictor.models.model_bundle import save_model_bundle
 from precipitation_predictor.models.xgboost_wrapper import XGBoostWrapper
@@ -51,7 +52,7 @@ def main() -> None:
 	np.random.seed(SEED)
 	configure_pandas()
 
-	data = load_data(bilbao_data_files())
+	data = load_station_records(BILBAO_IDEMA)
 	df = create_temporal_features(
 		process_data(data),
 		DEFAULT_FEATURES,

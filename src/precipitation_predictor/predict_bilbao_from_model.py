@@ -8,16 +8,18 @@ import numpy as np
 import pandas as pd
 
 from precipitation_predictor.config import (
+	BILBAO_IDEMA,
 	BILBAO_RESULTS_DIR,
 	DEFAULT_DATE_FEATURES,
 	DEFAULT_FEATURES,
 	MAX_FEATURE_PERIOD,
 	SEED,
 	STD_RESIDUALS_LIST,
-	bilbao_data_files,
+	inference_data_window,
 )
+from precipitation_predictor.internal.climate_db import load_station_records
 from precipitation_predictor.internal.prediction import run_forecast
-from precipitation_predictor.internal.process_data import create_temporal_features, load_data, process_data
+from precipitation_predictor.internal.process_data import create_temporal_features, process_data
 from precipitation_predictor.models.model_bundle import load_model_bundle
 from precipitation_predictor.utils.pandas_utils import configure_pandas
 
@@ -51,8 +53,9 @@ def main() -> None:
 	model, manifest = load_model_bundle(args.model_dir)
 	output_dir = Path(args.output_dir)
 	prediction_label = (manifest.max_date + timedelta(days=1)).isoformat()
+	start_date, end_date = inference_data_window(manifest.max_date, manifest.forecast_horizon)
 
-	data = load_data(bilbao_data_files())
+	data = load_station_records(BILBAO_IDEMA, start_date=start_date, end_date=end_date)
 	df = create_temporal_features(
 		process_data(data),
 		DEFAULT_FEATURES,

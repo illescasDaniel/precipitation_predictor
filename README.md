@@ -86,9 +86,6 @@ pip install -e ".[dev]"
 # AEMET API key (required only to refresh raw data)
 cp .env.example .env   # then set AEMET_API_KEY in .env
 
-# Fetch new AEMET JSON (example: extend Málaga shard 8)
-./scripts/extract_aemet_data.sh --city malaga --start 2020-04-20 --shard 8
-
 # Run Bilbao predictions (XGBoost, sample dates; trains in memory each run)
 ./scripts/predict_bilbao.sh
 
@@ -104,9 +101,37 @@ cp .env.example .env   # then set AEMET_API_KEY in .env
 
 # Cross-validation benchmark (long-running)
 ./scripts/benchmark.sh
+
+# Optional: fetch new AEMET JSON (example: extend Málaga shard 8; also upserts SQLite)
+./scripts/extract_aemet_data.sh --city malaga --start 2020-04-20 --shard 8
 ```
 
-Data files live under `data/` and are loaded relative to the repository root. To refresh them, run `./scripts/extract_aemet_data.sh` (reads `AEMET_API_KEY` from a repo-root `.env` file; see `.env.example`).
+Climate data ships in two forms under `data/`:
+
+- **`data/**/*.json`** — AEMET JSON shards (source of truth, version-controlled).
+- **`data/climate.sqlite`** — SQLite copy of those records (also version-controlled) so scripts can query by station and date range without parsing every JSON file on each run.
+
+After clone, you can run predictions and exported-model inference immediately; no import step is required. Rebuild the database only when JSON changes:
+
+```bash
+./scripts/import_climate_db.sh   # re-import all JSON → climate.sqlite
+```
+
+`./scripts/extract_aemet_data.sh` writes JSON and upserts into SQLite in one step.
+
+## Climate data (SQLite)
+
+Historical records are queried at runtime from **`data/climate.sqlite`**. That file is **checked into the repo** and is generated from the AEMET JSON shards in `data/` (same station/day records; JSON remains the canonical export format for reference and diffs).
+
+| When | Command |
+|------|---------|
+| Fresh clone | Use committed `data/climate.sqlite` as-is |
+| After editing or adding JSON under `data/` | `./scripts/import_climate_db.sh` |
+| After fetching from AEMET API | `./scripts/extract_aemet_data.sh ...` (JSON + SQLite upsert) |
+
+**Training / export / benchmark** load the full Bilbao series from SQLite. **Inference from an exported model** loads only a trailing window (~51 days of history plus the 14-day evaluation horizon) — enough for lag/rolling features without reading 75 years of rows.
+
+Schema: one row per `(station idema, fecha)` with the raw AEMET record stored as JSON.
 
 ## Exported model (train once, forecast separately)
 
@@ -140,13 +165,22 @@ Charts are written to `results/bilbao/` with the **first forecast day** as the f
 # → results/bilbao/models/2023-09-10/
 ```
 
-### Why inference still loads AEMET JSON
+If you refresh data after exporting, re-run import (if needed) and export when you want an updated booster trained through the new last day.
 
-The saved booster contains only the trained trees. **Lag and rolling features** (precipitation lags up to 20 days, rolling std up to 25 days, humidity lag 14 days) are computed at forecast time from recent daily observations. The 14-day forecast is also **autoregressive**: each predicted day is fed back as history for the next.
+### Bundled models in the repo
 
-Today’s scripts load **all** Bilbao JSON shards under `data/Bilbao/` (the same files used for training). That is more history than the feature math strictly needs: the longest lookback window is **25 days** before each forecast step, plus up to 13 prior **predicted** days inside the horizon. The full series is loaded for simplicity and to stay aligned with the in-memory training path; only rows through `manifest.max_date` are used as known history when forecasting.
+| Bundle | `max_date` | Use case |
+|--------|------------|----------|
+| `results/bilbao/models/2023-09-11/` | 2023-09-10 | Past-date evaluation (MAE 5.04 mm vs ground truth) |
+| `results/bilbao/models/2025-02-25/` | 2025-02-25 | Current full-history production model (forward forecast) |
 
-If you refresh data after exporting, re-run export when you want an updated booster trained through the new last day.
+```bash
+# Past window with known outcomes (metrics printed)
+./scripts/predict_bilbao_from_model.sh --model-dir results/bilbao/models/2023-09-11
+
+# Forward forecast from latest data (charts only if no future ground truth)
+./scripts/predict_bilbao_from_model.sh --model-dir results/bilbao/models/2025-02-25
+```
 
 ## Project structure
 
@@ -160,8 +194,10 @@ precipitation_predictor/
 │   ├── visualize_seasonality.py   # Multi-city seasonality chart
 │   ├── benchmark.py               # Cross-validation benchmark
 │   ├── extract_aemet_data.py      # Fetch raw AEMET JSON into data/
+│   ├── import_climate_db.py       # Import JSON shards into SQLite
 │   ├── internal/                  # Core library modules
-│   │   ├── process_data.py        # AEMET JSON loading & cleaning
+│   │   ├── climate_db.py          # SQLite storage and station queries
+│   │   ├── process_data.py        # AEMET record cleaning & features
 │   │   ├── prediction.py          # Training & evaluation orchestration
 │   │   └── custom_metrics.py      # Rain-error metrics
 │   ├── models/                    # XGBoost wrapper, model bundle I/O
@@ -173,10 +209,12 @@ precipitation_predictor/
 │   ├── export_bilbao_model.sh     # Export XGBoost bundle (.ubj + manifest)
 │   ├── predict_bilbao_from_model.sh  # Forecast from exported bundle
 │   ├── extract_aemet_data.sh      # Fetch AEMET JSON into data/
+│   ├── import_climate_db.sh       # Build data/climate.sqlite from JSON
 │   ├── visualize_seasonality.sh   # Run seasonality visualization
 │   ├── benchmark.sh               # Run cross-validation benchmark
 │   └── quality/checks.sh          # Lint, typecheck, audit gate
-├── data/                          # AEMET JSON per city
+├── tests/                         # Unit and integration tests (pytest)
+├── data/                          # AEMET JSON (source) + climate.sqlite (query cache)
 ├── docs/                          # Methodology documentation
 ├── results/                       # Charts and metrics (committed)
 ```
@@ -189,6 +227,22 @@ Quality gate (run after substantive changes):
 ./scripts/quality/checks.sh --fix   # autofix, then full gate
 ./scripts/quality/checks.sh         # confirm clean (CI mode)
 ```
+
+### Tests
+
+Fast unit tests (no database or exported models required):
+
+```bash
+./scripts/quality/pytest.sh -m "not integration"
+```
+
+Full suite including integration tests (uses committed `data/climate.sqlite` and model bundles):
+
+```bash
+./scripts/quality/pytest.sh
+```
+
+Integration tests verify past-model MAE (5.04 mm), trailing-window parity, and forward forecasts from `models/2025-02-25/`. Re-run `./scripts/import_climate_db.sh` first only if you changed JSON without updating `climate.sqlite`.
 
 See [AGENTS.md](AGENTS.md) for agent-oriented conventions.
 

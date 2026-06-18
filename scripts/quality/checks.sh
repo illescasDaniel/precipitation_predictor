@@ -2,7 +2,7 @@
 
 set -u
 
-# Quality gate — audit, ruff, shell, basedpyright.
+# Quality gate — audit, ruff, shell, basedpyright, pytest.
 # --fix: ruff autofix+format and shfmt write; ignored when CI=true.
 
 quality_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,7 +27,7 @@ if [[ "${CI:-}" == "true" && "${FIX}" == true ]]; then
 	FIX=false
 fi
 
-GATE_PLANNED_STEPS=4
+GATE_PLANNED_STEPS=5
 gate_init
 
 # shellcheck source=scripts/quality/internal/lib.sh
@@ -154,6 +154,19 @@ else
 		gate_gha_error "" "" "" "basedpyright" "type check failed (exit ${pyright_exit})"
 		gate_record_fail 1 0
 	fi
+fi
+
+# --- 5. pytest ---
+gate_step_start "pytest"
+pytest_output="$("${quality_dir}/pytest.sh" -m "not integration" 2>&1)"
+pytest_exit=$?
+printf '%s\n' "${pytest_output}"
+if [[ "${pytest_exit}" -eq 0 ]]; then
+	gate_record_pass
+else
+	gate_gha_error "" "" "" "pytest" "unit tests failed (exit ${pytest_exit})"
+	gate_record_fail 1 0
+	gate_add_detail "[pytest] exit ${pytest_exit}"
 fi
 
 gate_exit

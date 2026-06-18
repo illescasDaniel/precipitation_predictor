@@ -10,6 +10,9 @@ import requests
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 
+from precipitation_predictor.config import CLIMATE_DB_PATH
+from precipitation_predictor.internal.climate_db import get_connection, upsert_records
+
 
 AEMET_REQUEST_TIMEOUT_SECONDS = 30
 
@@ -136,6 +139,14 @@ def fetch_historical_data(
 			print(f"\nData successfully saved to {output_file}")
 		except OSError as error:
 			print(f"Failed to write output file: {error}")
+
+	if all_data:
+		conn = get_connection(CLIMATE_DB_PATH)
+		try:
+			upserted = upsert_records(conn, all_data)
+			print(f"Upserted {upserted} records into {CLIMATE_DB_PATH}")
+		finally:
+			conn.close()
 
 	return all_data
 

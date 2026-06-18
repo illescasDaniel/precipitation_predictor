@@ -5,4 +5,5 @@ older/
 *.egg-info/
 .ruff_cache/
 .pyright/
+.pytest_cache/
 Thumbs.db

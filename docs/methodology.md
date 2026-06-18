@@ -26,7 +26,9 @@ Comparing five cities (Bilbao, San Sebastián, Valencia, Madrid, Málaga) via 7-
 
 ## Data preparation
 
-**Source**: AEMET Open Data, Bilbao station (`historical_climate_data_BILBAO_*.json`).
+**Source**: AEMET Open Data, Bilbao station (`historical_climate_data_BILBAO_*.json` under `data/`).
+
+**Storage**: JSON shards in `data/` are the canonical, version-controlled export. Runtime scripts query **`data/climate.sqlite`**, a SQLite database built from those same JSON files (also checked into the repo). Rebuild with `./scripts/import_climate_db.sh` after JSON changes, or upsert via `./scripts/extract_aemet_data.sh` when fetching new data from AEMET.
 
 **Extraction** (raw JSON into `data/`): `./scripts/extract_aemet_data.sh` (`extract_aemet_data.py`) reads `AEMET_API_KEY` from repo-root `.env`.
 
