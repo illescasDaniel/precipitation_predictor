@@ -27,7 +27,7 @@ class Model(Protocol, Generic[T]):
 		additional_date_features: list[str],
 	) -> list[float]: ...
 
-	def _train_test_split(
+	def train_test_split(
 		self, df: pd.DataFrame, min_date: pd.Timestamp, max_date: pd.Timestamp, periods: int
 	) -> tuple[pd.DataFrame, pd.DataFrame]:
 		train = df.loc[(df[Column.DATE] >= min_date) & (df[Column.DATE] <= max_date)].copy()

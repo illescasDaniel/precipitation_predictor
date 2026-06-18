@@ -1,0 +1,5 @@
+
+Model Performance:
+- Custom Rain Error: 23.83
+- MAE Error: 5.04
+- Prediction Period: 2023-09-11 to 2023-09-24

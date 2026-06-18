@@ -12,6 +12,7 @@ from precipitation_predictor.models.booster_model import BoosterModel
 from precipitation_predictor.models.column import Column
 from precipitation_predictor.models.feature import Feature
 from precipitation_predictor.models.model_protocol import Model
+from precipitation_predictor.models.xgboost_wrapper import XGBoostWrapper
 from precipitation_predictor.utils.plot_utils import (
 	plot_feature_importance,
 	visualize_results,
@@ -35,21 +36,15 @@ class PredictionMetrics:
 		)
 
 
-def run_prediction(
-	df: pd.DataFrame,
-	min_date: pd.Timestamp,
-	max_date: pd.Timestamp,
+def _render_prediction_results(
 	model: Model[Any],
-	forecast_horizon: int,
-	features: list[Feature],
-	additional_date_features: list[str],
-	std_residuals_list: Optional[list[float]] = None,
-	output_dir: str | Path | None = None,
-	prediction_label: str = "prediction",
-	show: bool = False,
+	forecast: list[float],
+	max_date: pd.Timestamp,
+	std_residuals_list: Optional[list[float]],
+	output_dir: str | Path | None,
+	prediction_label: str,
+	show: bool,
 ) -> Optional[PredictionMetrics]:
-	forecast = model.fit_predict(df, min_date, max_date, forecast_horizon, features, additional_date_features)
-
 	metrics: Optional[PredictionMetrics] = None
 
 	if not model.test_.empty:
@@ -102,6 +97,41 @@ def run_prediction(
 		)
 
 	return metrics
+
+
+def run_prediction(
+	df: pd.DataFrame,
+	min_date: pd.Timestamp,
+	max_date: pd.Timestamp,
+	model: Model[Any],
+	forecast_horizon: int,
+	features: list[Feature],
+	additional_date_features: list[str],
+	std_residuals_list: Optional[list[float]] = None,
+	output_dir: str | Path | None = None,
+	prediction_label: str = "prediction",
+	show: bool = False,
+) -> Optional[PredictionMetrics]:
+	forecast = model.fit_predict(df, min_date, max_date, forecast_horizon, features, additional_date_features)
+	return _render_prediction_results(model, forecast, max_date, std_residuals_list, output_dir, prediction_label, show)
+
+
+def run_forecast(
+	df: pd.DataFrame,
+	min_date: pd.Timestamp,
+	max_date: pd.Timestamp,
+	model: XGBoostWrapper,
+	forecast_horizon: int,
+	features: list[Feature],
+	additional_date_features: list[str],
+	std_residuals_list: Optional[list[float]] = None,
+	output_dir: str | Path | None = None,
+	prediction_label: str = "prediction",
+	show: bool = False,
+) -> Optional[PredictionMetrics]:
+	train, test = model.train_test_split(df, min_date, max_date, forecast_horizon)
+	forecast = model.forecast(train, test, max_date, forecast_horizon, features, additional_date_features)
+	return _render_prediction_results(model, forecast, max_date, std_residuals_list, output_dir, prediction_label, show)
 
 
 def run_prediction_benchmark(

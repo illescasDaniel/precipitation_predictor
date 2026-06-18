@@ -12,6 +12,7 @@ class XGBoostWrapper(Model[xgb.XGBRegressor], BoosterModel):
 	def __init__(self, seed: int, use_eval_sets: bool = False) -> None:
 		self.model_name = "XGBoost"
 		self.__use_eval_sets = use_eval_sets
+		self._feature_columns: list[str] = []
 		self.model = xgb.XGBRegressor(
 			objective="reg:tweedie",
 			n_estimators=300,
@@ -26,20 +27,17 @@ class XGBoostWrapper(Model[xgb.XGBRegressor], BoosterModel):
 			tweedie_variance_power=1.9,
 		)
 
-	def fit_predict(
+	def fit(
 		self,
-		df: pd.DataFrame,
-		min_date: pd.Timestamp,
-		max_date: pd.Timestamp,
-		periods: int,
+		train: pd.DataFrame,
+		test: pd.DataFrame,
 		features: list[Feature],
 		additional_date_features: list[str],
-	):
-		train, test = super()._train_test_split(df, min_date, max_date, periods)
-
+	) -> None:
 		included_features = [f.new_col for f in features]
 		included_features += additional_date_features
 		X_train, y_train = train.loc[:, [*included_features]].copy(), train[Column.PRECIPITATION]
+		self._feature_columns = list(X_train.columns)
 
 		if self.__use_eval_sets:
 			X_test, y_test = test.loc[:, [*included_features]].copy(), test[Column.PRECIPITATION]
@@ -53,34 +51,58 @@ class XGBoostWrapper(Model[xgb.XGBRegressor], BoosterModel):
 		else:
 			self.model.fit(X_train, y_train)
 
-		# Initialize future dates and forecast storage
-		self.future_dates_ = pd.date_range(start=max_date + pd.Timedelta(days=1), periods=periods)
-		forecast = []
+	def forecast(
+		self,
+		train: pd.DataFrame,
+		test: pd.DataFrame,
+		max_date: pd.Timestamp,
+		periods: int,
+		features: list[Feature],
+		additional_date_features: list[str],
+	) -> list[float]:
+		if not self._feature_columns:
+			raise RuntimeError("Model must be fitted or loaded before forecasting.")
 
-		# Start with the training data as the historical base
+		self.future_dates_ = pd.date_range(start=max_date + pd.Timedelta(days=1), periods=periods)
+		forecast: list[float] = []
 		historical_data = train.copy()
 
-		# Predict day-by-day
 		for future_date in self.future_dates_:
-			# Create a single-day future DataFrame
 			future = pd.DataFrame({Column.DATE: [future_date]})
-			# Generate features using historical data (including past predictions)
 			future = self._create_features(future, historical_data, features, additional_date_features)
 
-			# Predict precipitation for this day
-			pred = self.model.predict(future[X_train.columns])[0]
+			pred = self.model.predict(future[self._feature_columns])[0]
 			pred = max(0, pred)  # type: ignore
 			forecast.append(pred)
 
-			# Append the prediction to historical data for the next iteration
 			new_row = future.iloc[0].copy()
 			new_row[Column.PRECIPITATION] = pred
 			historical_data = pd.concat([historical_data, new_row.to_frame().T], ignore_index=True)
 
 		self.test_ = test
 		self.train_ = train
-
 		return forecast
+
+	def fit_predict(
+		self,
+		df: pd.DataFrame,
+		min_date: pd.Timestamp,
+		max_date: pd.Timestamp,
+		periods: int,
+		features: list[Feature],
+		additional_date_features: list[str],
+	) -> list[float]:
+		train, test = super().train_test_split(df, min_date, max_date, periods)
+		self.fit(train, test, features, additional_date_features)
+		return self.forecast(train, test, max_date, periods, features, additional_date_features)
+
+	@property
+	def feature_columns(self) -> list[str]:
+		return list(self._feature_columns)
+
+	@feature_columns.setter
+	def feature_columns(self, columns: list[str]) -> None:
+		self._feature_columns = list(columns)
 
 	@property
 	def feature_names_(self) -> list[str]:

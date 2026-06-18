@@ -15,6 +15,7 @@ MAX_FEATURE_PERIOD = max((f.window for f in DEFAULT_FEATURES), default=0)
 
 RESULTS_DIR = "./results"
 BILBAO_RESULTS_DIR = f"{RESULTS_DIR}/bilbao"
+BILBAO_MODELS_DIR = f"{BILBAO_RESULTS_DIR}/models"
 SEASONALITY_OUTPUT_PATH = f"{RESULTS_DIR}/seasonality/7d-rolling-sum-prec.png"
 BENCHMARK_RESULTS_DIR = f"{RESULTS_DIR}/benchmark"
 BENCHMARK_OUTPUT_PATH = f"{BENCHMARK_RESULTS_DIR}/output.txt"

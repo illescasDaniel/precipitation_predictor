@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "model_name": "XGBoost",
+  "seed": 28,
+  "min_date": "1949-12-26",
+  "max_date": "2025-02-25",
+  "forecast_horizon": 14,
+  "feature_columns": [
+    "precipitation_lag_14d",
+    "precipitation_lag_16d",
+    "precipitation_lag_18d",
+    "precipitation_lag_20d",
+    "average_humidity_lag_14d",
+    "precipitation_rolling_14d_std",
+    "precipitation_rolling_25d_std",
+    "day_of_year"
+  ],
+  "additional_date_features": [
+    "day_of_year"
+  ]
+}

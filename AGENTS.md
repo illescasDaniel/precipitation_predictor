@@ -21,6 +21,8 @@
 |--------|---------|
 | `./scripts/extract_aemet_data.sh` | Fetch raw AEMET JSON into `data/` |
 | `./scripts/predict_bilbao.sh` | Train/predict Bilbao for sample dates |
+| `./scripts/export_bilbao_model.sh` | Train and export Bilbao XGBoost bundle (`.ubj` + manifest); optional `--prediction-date`, default output dir uses `max_date` |
+| `./scripts/predict_bilbao_from_model.sh` | Forecast from an exported model bundle (no retraining) |
 | `./scripts/visualize_seasonality.sh` | Multi-city seasonality chart |
 | `./scripts/benchmark.sh` | Expanding-window cross-validation → `results/benchmark/` |
 
