@@ -38,7 +38,7 @@ include = ["precipitation_predictor*"]
 [tool.ruff]
 line-length = 120
 target-version = "py313"
-src = ["src"]
+src = ["src", "tests"]
 
 [tool.ruff.format]
 indent-style = "tab"

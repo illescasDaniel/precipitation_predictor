@@ -4,6 +4,8 @@ older/
 .venv/
 *.egg-info/
 .ruff_cache/
+.mypy_cache/
+.basedpyright/
 .pyright/
 .pytest_cache/
 Thumbs.db

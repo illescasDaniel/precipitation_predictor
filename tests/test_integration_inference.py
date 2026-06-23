@@ -9,13 +9,13 @@ import pytest
 
 from precipitation_predictor.config import (
 	BILBAO_IDEMA,
+	CLIMATE_DB_PATH,
 	DEFAULT_DATE_FEATURES,
 	DEFAULT_FEATURES,
 	FORECAST_HORIZON,
 	INFERENCE_LOOKBACK_DAYS,
 	MAX_FEATURE_PERIOD,
 	SEED,
-	CLIMATE_DB_PATH,
 	inference_data_window,
 )
 from precipitation_predictor.internal.climate_db import load_station_records

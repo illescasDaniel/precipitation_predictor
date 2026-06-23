@@ -20,7 +20,16 @@ lib_activate_venv() {
 
 lib_ruff_targets() {
 	# shellcheck disable=SC2034  # consumed by callers after sourcing
-	LIB_RUFF_TARGETS=(src)
+	LIB_RUFF_TARGETS=()
+	if [[ -d "${LIB_REPO_ROOT}/src" ]]; then
+		LIB_RUFF_TARGETS+=(src)
+	fi
+	if [[ -d "${LIB_REPO_ROOT}/tests" ]]; then
+		LIB_RUFF_TARGETS+=(tests)
+	fi
+	if [[ ${#LIB_RUFF_TARGETS[@]} -eq 0 ]]; then
+		LIB_RUFF_TARGETS=(scripts/quality/internal)
+	fi
 }
 
 lib_shell_targets() {

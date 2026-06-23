@@ -15,4 +15,6 @@ if ! command -v pip-audit &>/dev/null; then
 	pip install pip-audit
 fi
 
+python -m pip install --upgrade 'msgpack>=1.2.1'
+
 pip-audit -l --skip-editable

@@ -5,11 +5,17 @@ from typing import cast
 
 import pandas as pd
 
-from precipitation_predictor.config import DEFAULT_DATE_FEATURES, DEFAULT_FEATURES, FORECAST_HORIZON, MAX_FEATURE_PERIOD, SEED
+from fixtures_data import aemet_record
+from precipitation_predictor.config import (
+	DEFAULT_DATE_FEATURES,
+	DEFAULT_FEATURES,
+	FORECAST_HORIZON,
+	MAX_FEATURE_PERIOD,
+	SEED,
+)
 from precipitation_predictor.internal.process_data import create_temporal_features, process_data
 from precipitation_predictor.models.column import Column
 from precipitation_predictor.models.xgboost_wrapper import XGBoostWrapper
-from fixtures_data import aemet_record
 
 
 def _synthetic_dataframe(days: int = 80) -> pd.DataFrame:

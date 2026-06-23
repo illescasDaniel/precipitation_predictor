@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
-import pytest
-
 from precipitation_predictor.config import (
 	FORECAST_HORIZON,
 	INFERENCE_LOOKBACK_DAYS,

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from fixtures_data import aemet_record, make_daily_records
 from precipitation_predictor.internal.climate_db import (
 	fetch_records,
 	get_connection,
@@ -12,9 +13,6 @@ from precipitation_predictor.internal.climate_db import (
 	load_station_records,
 	upsert_records,
 )
-
-
-from fixtures_data import aemet_record, make_daily_records
 
 
 @pytest.fixture
